@@ -1,22 +1,63 @@
 import {useState} from 'react';
-import {useLoaderData} from '@remix-run/react';
-import emailjs from '@emailjs/browser';
 import {useFormik} from 'formik';
 import * as Yup from 'yup';
 
 import {getFormikKeys} from '../lib/utils';
 
 import {FailIcon, SuccessIcon} from '~/components';
+import {json} from '@shopify/remix-oxygen';
 
-export async function loader({context}) {
+export async function action({request, context}) {
   const formikKeys = await getFormikKeys(context);
-  return formikKeys;
+  const formData = await request.formData();
+  const values = Object.fromEntries(formData);
+
+  try {
+    const payload = {
+      service_id: formikKeys.SERVICE_ID,
+      template_id: formikKeys.TEMPLATE_ID,
+      user_id: formikKeys.PUBLIC_KEY,
+      template_params: {
+        user_name: values.user_name,
+        user_email: values.user_email,
+        message: values.message,
+      },
+    };
+
+    const response = await fetch(
+      'https://api.emailjs.com/api/v1.0/email/send',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      },
+    );
+
+    const contentType = response.headers.get('content-type');
+
+    if (response.ok) {
+      // If the response is JSON, parse it; otherwise, return the text
+      const responseData = contentType.includes('application/json')
+        ? await response.json()
+        : await response.text();
+      return json({success: true, response: responseData}, {status: 200});
+    } else {
+      const errorData = contentType.includes('application/json')
+        ? await response.json()
+        : await response.text();
+      throw new Error(errorData || 'Failed to send email');
+    }
+  } catch (error) {
+    return json({success: false, error: error.message}, {status: 500});
+  }
 }
 
 export default function Contact() {
   const [messageSent, setMessageSent] = useState(null);
   const [messageReceived, setMessageReceived] = useState(false);
-  const data = useLoaderData();
+
   const formik = useFormik({
     initialValues: {
       user_name: '', //user name
@@ -34,26 +75,28 @@ export default function Contact() {
         ),
       message: Yup.string().required('* Message field is required'),
     }),
-    onSubmit: (values, {setSubmitting, resetForm}) => {
+    onSubmit: async (values, {setSubmitting, resetForm}) => {
       try {
-        emailjs
-          .send(data.SERVICE_ID, data.TEMPLATE_ID, values, data.PUBLIC_KEY)
-          .then(() => {
-            setSubmitting(false);
-            setMessageSent(true);
-            setMessageReceived(true);
-            resetForm();
-            setTimeout(() => {
-              setMessageSent(false);
-            }, 5000);
-          });
-      } catch {
+        const response = await fetch('/contact', {
+          method: 'POST',
+          body: new URLSearchParams(values),
+        });
+
+        if (response.ok) {
+          setSubmitting(false);
+          setMessageSent(true);
+          setMessageReceived(true);
+          resetForm();
+          setTimeout(() => setMessageSent(false), 5000);
+        } else {
+          const errorResponse = await response.json();
+          throw new Error(errorResponse.error);
+        }
+      } catch (error) {
         setSubmitting(false);
         setMessageSent(true);
         setMessageReceived(false);
-        setTimeout(() => {
-          setMessageSent(false);
-        }, 5000);
+        setTimeout(() => setMessageSent(false), 5000);
       }
     },
   });

@@ -63,7 +63,7 @@ const CollectionProducts = memo(function CollectionProducts({params}) {
 
   return (
     <>
-      {collectionsContent && <FloatingCircles points={points} />}
+      <FloatingCircles points={points} />
       <group ref={groupRef}>
         {collectionsContent &&
           collectionsContent?.map((product, index) => {

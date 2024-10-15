@@ -30,6 +30,7 @@ import {
 import {useCartFetchers} from '~/hooks/useCartFetchers';
 import {useIsHydrated} from '~/hooks/useIsHydrated';
 import {useIsHomePath} from '~/lib/utils';
+import {Loader} from './Loader';
 
 export function Layout({children, layout}) {
   const {headerMenu, footerMenu} = layout;
@@ -58,7 +59,7 @@ function CanvasContainer() {
   return (
     <div className="canvas w-full h-full absolute z-[-2]">
       <ScrollProvider>
-        <Suspense fallback={null}>
+        <Suspense fallback={<Loader />}>
           <Canvas
             linear
             flat

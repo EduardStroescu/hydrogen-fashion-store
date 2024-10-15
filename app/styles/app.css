@@ -118,12 +118,38 @@ shop-pay-button {
     scroll-padding-top: 10rem;
   }
 
+  .loaderShadow {
+    -webkit-box-shadow: 0px 0px 183px 20px rgba(16,188,207,0.87);
+    -moz-box-shadow: 0px 0px 183px 20px rgba(16,188,207,0.87);
+    box-shadow: 0px 0px 183px 20px rgba(16,188,207,0.87);
+  }
+
+  .loaderShadow::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    -webkit-box-shadow: inset 0px 0px 112px -30px rgba(16,188,207,0.87);
+    -moz-box-shadow: inset 0px 0px 112px -30px rgba(16,188,207,0.87);
+    box-shadow: inset 0px 0px 112px -30px rgba(16,188,207,0.87);
+  }
+
   input[type='search']::-webkit-search-decoration,
   input[type='search']::-webkit-search-cancel-button,
   input[type='search']::-webkit-search-results-button,
   input[type='search']::-webkit-search-results-decoration {
     -webkit-appearance: none;
   }
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: #ffffff;
+  transition: background-color 5000s ease-in-out 0s;
+  box-shadow: inset 0 0 20px 20px #23232329;
+}
 
   a.active {
     @apply border-b;
